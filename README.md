@@ -66,7 +66,7 @@ Workspaces are tracked in `.agent-workspaces/registry.json` inside your reposito
 
 ## Comparison with Worktrunk
 
-| Feature              | Worktrunk | agent-workspace |
+| Feature | Worktrunk | agent-workspace |
 |----------------------|-----------|-----------------|
 | Language             | Rust      | Python          |
 | Git worktree         | ✅        | ✅              |
