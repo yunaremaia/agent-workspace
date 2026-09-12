@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-workspace"
+version = "0.1.0"
+description = "Git worktree manager for parallel AI agents"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Yunare Maia", email = "yunare@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Version Control :: Git",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "typer>=0.12.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+agent-workspace = "agent_workspace.cli:app"
+aws = "agent_workspace.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/yunaremaia/agent-workspace"
+Issues = "https://github.com/yunaremaia/agent-workspace/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agent_workspace"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
