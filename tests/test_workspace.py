@@ -14,6 +14,7 @@ from agent_workspace.workspace import (
     find_repo,
     get_default_branch,
     list_workspaces,
+    sanitize_branch_component,
 )
 
 
@@ -109,3 +110,36 @@ class TestWorkspaceModel:
         assert d["id"] == "abc12345"
         assert d["agent"] == "claude"
         assert d["status"] == "active"
+
+
+class TestSanitizeBranchComponent:
+    def test_examples_from_issue(self) -> None:
+        assert sanitize_branch_component("Fix bug in auth/../api") == "Fix-bug-in-auth-api"
+        assert sanitize_branch_component("Update README") == "Update-README"
+
+    def test_malicious_characters(self) -> None:
+        assert sanitize_branch_component("../malicious") == "malicious"
+        assert sanitize_branch_component("task with {brackets} and ~tilde^caret:colon") == "task-with-brackets-and-tildecaretcolon"
+        assert sanitize_branch_component("task..with...multiple.dots") == "task-with-multiple.dots"
+        assert sanitize_branch_component("unicode-🚀-test") == "unicode-test"
+
+    def test_empty_or_all_invalid(self) -> None:
+        assert sanitize_branch_component("") == "task"
+        assert sanitize_branch_component("   ") == "task"
+        assert sanitize_branch_component("../..") == "task"
+        assert sanitize_branch_component("@{}^~:?") == "task"
+
+
+class TestCreateWorkspaceSanitization:
+    def test_create_workspace_malicious_task(self, git_repo: Path) -> None:
+        ws = create_workspace(git_repo, task="../malicious/path^{}:?*", agent=AgentType.CLAUDE)
+        assert ws.id
+        assert ws.worktree_path.exists()
+        assert "malicious-path" in ws.branch
+        # Verify branch ref is valid in git
+        import subprocess
+        res = subprocess.run(
+            ["git", "-C", str(git_repo), "check-ref-format", f"refs/heads/{ws.branch}"],
+            capture_output=True,
+        )
+        assert res.returncode == 0

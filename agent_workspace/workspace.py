@@ -1,6 +1,7 @@
 """Core workspace manager for agent-workspace."""
 from __future__ import annotations
 
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,28 @@ from .models import AgentType, Workspace, WorkspaceStatus
 
 class WorkspaceError(Exception):
     """Raised when a workspace operation fails."""
+
+
+def sanitize_branch_component(text: str) -> str:
+    """Sanitize arbitrary text for safe use as a git branch name component.
+
+    Allows only [a-zA-Z0-9._-], collapses consecutive separators, strips leading/trailing
+    dots/hyphens, and guarantees a valid non-empty slug.
+    """
+    if not text:
+        return "task"
+    # Replace spaces and slashes with hyphens
+    normalized = re.sub(r"[\s/\\]+", "-", text)
+    # Strip everything except [a-zA-Z0-9._-]
+    sanitized = re.sub(r"[^a-zA-Z0-9._-]", "", normalized)
+    # Consecutive dots are invalid in git refs (..) - replace with hyphen
+    sanitized = re.sub(r"\.{2,}", "-", sanitized)
+    # Collapse multiple consecutive hyphens or dots
+    sanitized = re.sub(r"-+", "-", sanitized)
+    sanitized = re.sub(r"\.+", ".", sanitized)
+    # Strip leading/trailing dots and hyphens
+    sanitized = sanitized.strip(".-")
+    return sanitized[:40] or "task"
 
 
 def _git(repo_path: Path, *args: str, check: bool = True, capture: bool = True) -> subprocess.CompletedProcess:
@@ -72,9 +95,14 @@ def create_workspace(
         base_branch = get_default_branch(repo_path)
 
     # Generate a branch name
-    slug = task.lower().replace(" ", "-").replace("/", "-")[:40]
+    slug = sanitize_branch_component(task.lower())
     ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     branch = f"{branch_prefix}/{agent.value}/{slug}-{ts}"
+
+    # Validate ref format before creating any directory
+    ref_check = _git(repo_path, "check-ref-format", f"refs/heads/{branch}", check=False)
+    if ref_check.returncode != 0:
+        raise WorkspaceError(f"Invalid git branch name generated: {branch}")
 
     # Create the worktree directory under the repo
     worktree_base = repo_path / ".agent-workspaces"
