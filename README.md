@@ -25,6 +25,37 @@ Or from source:
 pip install git+https://github.com/yunaremaia/agent-workspace.git
 ```
 
+## Docker
+
+The repository includes a minimal container with Python, Git, and
+`agent-workspace` installed. Build it with:
+
+```bash
+docker build -t agent-workspace .
+```
+
+The Compose setup mounts the current repository at `/workspace` and keeps the
+workspace registry and worktrees in a named volume:
+
+```bash
+docker compose run --rm agent-workspace list
+docker compose run --rm agent-workspace create "Fix authentication bug" --agent claude
+```
+
+To use a direct Docker command instead, mount a Git repository and set the
+working directory:
+
+```bash
+docker run --rm -it \
+  -v "$PWD:/workspace" \
+  -w /workspace \
+  agent-workspace list
+```
+
+The mounted directory must be a Git repository. Git credentials and SSH keys
+are intentionally not copied into the image; mount them explicitly when a
+workflow needs access to a private remote.
+
 ## Quick Start
 
 ```bash
