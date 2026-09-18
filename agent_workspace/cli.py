@@ -44,7 +44,7 @@ def main(
 
 @app.command()
 def create(
-    task: str = typer.Argument(..., help="Task description for the agent"),
+    task: str = typer.Argument(..., help="Task description for the agent (sanitized for safe git branch names)"),
     agent: AgentType = typer.Option(AgentType.CLAUDE, "--agent", "-a", help="Agent type"),
     base: Optional[str] = typer.Option(None, "--base", "-b", help="Base branch (auto-detect if omitted)"),
     repo: Optional[Path] = typer.Option(None, "--repo", "-r", help="Repository path (default: cwd)"),
