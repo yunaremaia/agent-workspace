@@ -1,0 +1,12 @@
+services:
+  agent-workspace:
+    build: .
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - agent-workspaces:/workspace/.agent-workspaces
+    stdin_open: true
+    tty: true
+
+volumes:
+  agent-workspaces:
