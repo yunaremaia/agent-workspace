@@ -55,6 +55,14 @@ class TestFindRepo:
 
     def test_not_a_repo(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.chdir(tmp_path)
+        # find_repo() walks up towards the filesystem root, so the case this test
+        # needs only exists while no ancestor of tmp_path is itself a repository.
+        # That holds on CI, but not on a workstation or sandbox whose TMPDIR is
+        # nested inside one, where find_repo() correctly resolves to the enclosing
+        # repo instead of raising.
+        enclosing = [parent for parent in tmp_path.parents if (parent / ".git").exists()]
+        if enclosing:
+            pytest.skip(f"tmp_path is nested inside the Git repo at {enclosing[0]}")
         with pytest.raises(WorkspaceError, match="Not a git repository"):
             find_repo()
 
