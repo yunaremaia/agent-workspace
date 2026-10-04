@@ -15,7 +15,6 @@ from .workspace import (
     create_workspace,
     destroy_workspace,
     find_repo,
-    get_workspace,
     list_workspaces,
     prune_workspaces,
 )

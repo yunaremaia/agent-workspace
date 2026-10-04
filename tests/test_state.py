@@ -1,19 +1,17 @@
 """Tests for state management and snapshots."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
-from agent_workspace.models import AgentType
 from agent_workspace.state import (
     list_snapshots,
     load_snapshot,
     save_snapshot,
     take_snapshot,
 )
-from agent_workspace.workspace import create_workspace, find_repo
+from agent_workspace.workspace import create_workspace
 
 
 @pytest.fixture

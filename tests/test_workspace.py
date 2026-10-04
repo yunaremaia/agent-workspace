@@ -1,12 +1,11 @@
 """Tests for agent-workspace."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
-from agent_workspace.models import AgentType, Workspace, WorkspaceStatus
+from agent_workspace.models import AgentType, Workspace
 from agent_workspace.workspace import (
     WorkspaceError,
     create_workspace,
