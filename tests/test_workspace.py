@@ -7,6 +7,7 @@ import pytest
 
 from agent_workspace.models import AgentType, Workspace
 from agent_workspace.workspace import (
+    prune_workspaces,
     WorkspaceError,
     create_workspace,
     destroy_workspace,
@@ -150,3 +151,14 @@ class TestCreateWorkspaceSanitization:
             capture_output=True,
         )
         assert res.returncode == 0
+
+
+class TestPruneWorkspaces:
+    def test_prune_reports_removed_worktree(self, git_repo: Path) -> None:
+        ws = create_workspace(git_repo, task="Stale task")
+        import shutil
+        shutil.rmtree(ws.worktree_path)
+        # git names the pruned entry after its worktree admin dir, not the full
+        # path, and only reports it on stderr — pin the exact value so a missing
+        # "Removing " filter cannot pass as a non-empty list.
+        assert prune_workspaces(git_repo) == [f"worktrees/{ws.id}"]

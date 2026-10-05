@@ -180,11 +180,12 @@ def destroy_workspace(repo_path: Path, ws_id: str, remove_branch: bool = True) -
 
 def prune_workspaces(repo_path: Path) -> list[str]:
     """Remove worktree entries whose directories no longer exist."""
-    result = _git_worktree(repo_path, "prune", check=False)
+    result = _git_worktree(repo_path, "prune", "-v", check=False)
     pruned: list[str] = []
-    if result.returncode == 0 and result.stdout:
-        for line in result.stdout.strip().splitlines():
-            pruned.append(line.strip())
+    if result.returncode == 0 and result.stderr:
+        for line in result.stderr.strip().splitlines():
+            if line.startswith("Removing "):
+                pruned.append(line[len("Removing "):].split(":")[0])
     return pruned
 
 
