@@ -52,7 +52,11 @@ def list_snapshots(repo_path: Path, ws_id: str) -> list[Path]:
     snapshots_dir = repo_path / ".agent-workspaces" / "snapshots" / ws_id
     if not snapshots_dir.exists():
         return []
-    return sorted(snapshots_dir.glob("*.json"), reverse=True)
+    return sorted(
+        snapshots_dir.glob("*.json"),
+        key=lambda path: path.stem.rsplit("-", 2)[-2:],
+        reverse=True,
+    )
 
 
 def load_snapshot(path: Path) -> Snapshot:

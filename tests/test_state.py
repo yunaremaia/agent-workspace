@@ -1,10 +1,12 @@
 """Tests for state management and snapshots."""
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
+from agent_workspace.models import Snapshot
 from agent_workspace.state import (
     list_snapshots,
     load_snapshot,
@@ -63,6 +65,28 @@ def test_list_snapshots(git_repo: Path) -> None:
 
     snaps = list_snapshots(git_repo, ws.id)
     assert len(snaps) == 1
+
+
+def test_list_snapshots_newest_first_when_uuid_order_differs(git_repo: Path) -> None:
+    older = Snapshot(
+        id="ffffffff",
+        workspace_id="workspace",
+        timestamp=datetime(2026, 1, 1, 12, 0, 0),
+    )
+    newer = Snapshot(
+        id="00000000",
+        workspace_id="workspace",
+        timestamp=datetime(2026, 1, 2, 12, 0, 0),
+    )
+
+    save_snapshot(git_repo, older)
+    save_snapshot(git_repo, newer)
+
+    snaps = list_snapshots(git_repo, "workspace")
+    assert [path.name for path in snaps] == [
+        "00000000-20260102-120000.json",
+        "ffffffff-20260101-120000.json",
+    ]
 
 
 def test_list_snapshots_empty(git_repo: Path) -> None:
