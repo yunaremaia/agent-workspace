@@ -59,10 +59,18 @@ def find_repo(path: Optional[Path] = None) -> Path:
 
 def get_default_branch(repo_path: Path) -> str:
     """Detect the default branch of the repository."""
-    # First, try the local branch list
+    # Prefer the remote's authoritative default branch when it is available.
+    result = _git(repo_path, "symbolic-ref", "--short", "refs/remotes/origin/HEAD", check=False)
+    if result.returncode == 0 and result.stdout:
+        remote_head = result.stdout.strip()
+        if remote_head.startswith("origin/"):
+            return remote_head[len("origin/") :]
+
+    # Fall back to local branches, excluding work branches created by this tool.
     result = _git(repo_path, "branch", "--format=%(refname:short)", check=False)
     if result.returncode == 0 and result.stdout:
         branches = [b.strip() for b in result.stdout.strip().splitlines()]
+        branches = [b for b in branches if not b.startswith("agent/")]
         # Prefer main over master
         if "main" in branches:
             return "main"
@@ -70,10 +78,6 @@ def get_default_branch(repo_path: Path) -> str:
             return "master"
         if branches:
             return branches[0]
-    # Fallback to remote HEAD
-    result = _git(repo_path, "symbolic-ref", "refs/remotes/origin/HEAD", check=False)
-    if result.returncode == 0:
-        return result.stdout.strip().split("/")[-1]
     raise WorkspaceError("Could not determine default branch")
 
 

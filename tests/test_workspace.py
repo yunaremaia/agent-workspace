@@ -73,6 +73,41 @@ class TestGetDefaultBranch:
         branch = get_default_branch(git_repo)
         assert branch in ("main", "master")
 
+    def test_preserves_slashes_in_remote_default_branch(self, git_repo: Path) -> None:
+        import subprocess
+
+        subprocess.run(
+            ["git", "branch", "release/2.x"], cwd=git_repo, check=True, capture_output=True
+        )
+        subprocess.run(
+            [
+                "git",
+                "symbolic-ref",
+                "refs/remotes/origin/HEAD",
+                "refs/remotes/origin/release/2.x",
+            ],
+            cwd=git_repo,
+            check=True,
+            capture_output=True,
+        )
+
+        assert get_default_branch(git_repo) == "release/2.x"
+
+    def test_ignores_agent_branches_when_guessing(self, git_repo: Path) -> None:
+        import subprocess
+
+        subprocess.run(
+            ["git", "branch", "-m", "develop"], cwd=git_repo, check=True, capture_output=True
+        )
+        subprocess.run(
+            ["git", "branch", "agent/claude/stale-task"],
+            cwd=git_repo,
+            check=True,
+            capture_output=True,
+        )
+
+        assert get_default_branch(git_repo) == "develop"
+
 
 class TestCreateWorkspace:
     def test_create_workspace(self, git_repo: Path) -> None:
