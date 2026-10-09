@@ -197,3 +197,4 @@ class TestPruneWorkspaces:
         # path, and only reports it on stderr — pin the exact value so a missing
         # "Removing " filter cannot pass as a non-empty list.
         assert prune_workspaces(git_repo) == [f"worktrees/{ws.id}"]
+        assert list_workspaces(git_repo) == []

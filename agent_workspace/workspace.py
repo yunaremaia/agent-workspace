@@ -190,6 +190,8 @@ def prune_workspaces(repo_path: Path) -> list[str]:
         for line in result.stderr.strip().splitlines():
             if line.startswith("Removing "):
                 pruned.append(line[len("Removing "):].split(":")[0])
+    for worktree in pruned:
+        _remove_from_registry(repo_path, Path(worktree).name)
     return pruned
 
 
